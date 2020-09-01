@@ -66,12 +66,12 @@ input {
   call variantCalling {
     input:
       sample = samplePrefix,
-      bam = bwa.bamFile
+      bam = bwa.bwaMappedBam
   }
 
   output {
-    File bam = bwa.bamFile
-    File bai = bwa.baiFile
+    File bam = bwa.bwaMappedBam
+    File bai = bwa.bwaMappedBai
     File vcf = variantCalling.vcfFile
     File consensusFasta = variantCalling.consensusFasta
     File variantOnlyVcf = variantCalling.variantOnlyVcf
@@ -118,7 +118,6 @@ task bwa {
     String modules = "bwa/0.7.12 samtools/1.9"
     File fastq1
     File fastq2
-    String reference = "$HG38_BOWTIE_INDEX_ROOT/hg38_random_index"
     String sample
     Int mem = 12
     Int timeout = 72
@@ -147,7 +146,7 @@ task bwa {
   }
 
   output {
-    File bwatMappedBam = "~{bwaMappedBam_}"
+    File bwaMappedBam = "~{bwaMappedBam_}"
     File bwaMappedBai = "~{bwaMappedBai_}"
   }
 }
