@@ -5,6 +5,7 @@ input {
     File fastq1
     File fastq2
     String samplePrefix
+		String refe
   }
 
   parameter_meta {
@@ -119,6 +120,7 @@ task bwa {
     File fastq1
     File fastq2
     String sample
+		String ref
     Int mem = 12
     Int timeout = 72
     Int threads = 8
