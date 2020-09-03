@@ -4,14 +4,15 @@ workflow providencePipeline {
 input {
     File fastq1
     File fastq2
+		File ref
     String samplePrefix
-		String refe
   }
 
   parameter_meta {
     fastq1: "Read 1 fastq file, gzipped. Can be either targeted or whole transcriptome"
     fastq2: "Read 2 fastq file, gzipped. Can be either targeted or whole transcriptome."
     samplePrefix: "Prefix for output files"
+    ref: "reference to be used for alignment"
   }
 
   meta {
@@ -56,18 +57,27 @@ input {
       fastq2 = fastq2,
       sample = samplePrefix
   }
-
+  
   call bwa {
       input:
       fastq1 = bbMap.out1,  
       fastq2 = bbMap.out2,
-      sample = samplePrefix
+      sample = samplePrefix,
+			reference = ref
   }
 
   call variantCalling {
     input:
       sample = samplePrefix,
-      bam = bwa.bwaMappedBam
+      bam = bwa.bwaMappedBam,
+			reference = ref
+  }
+  
+   call blast2ReferenceSequence {
+    input:
+      consensusFasta = variantCalling.consensusFasta,
+      sample = samplePrefix,
+      reference = ref
   }
 
   output {
@@ -76,6 +86,7 @@ input {
     File vcf = variantCalling.vcfFile
     File consensusFasta = variantCalling.consensusFasta
     File variantOnlyVcf = variantCalling.variantOnlyVcf
+    File bl2seqReport = blast2ReferenceSequence.bl2seqReport
   }
 }
 
@@ -120,7 +131,7 @@ task bwa {
     File fastq1
     File fastq2
     String sample
-		String ref
+		File reference
     Int mem = 12
     Int timeout = 72
     Int threads = 8
@@ -132,9 +143,12 @@ task bwa {
   command <<<
     set -euo pipefail
 
+    #index the reference
+    bwa index ~{reference}
+    
     #Align fastq files
-    bwa mem -M -t 8 $ref \
-    ~{fastq1} -2 ~{fastq2} | \
+    bwa mem -M -t 8 ~{reference} \
+    ~{fastq1}  ~{fastq2} | \
     samtools view -Sb | \
     samtools sort - -o ~{bwaMappedBam_}
 
@@ -158,7 +172,7 @@ task variantCalling {
     String modules = "bcftools/1.9 samtools/1.9 vcftools/0.1.16 seqtk/1.3"
     File bam
     String sample
-    String reference = "$HG38_BOWTIE_INDEX_ROOT/hg38_random_index"
+    File reference
     Int mem = 8
     Int timeout = 72
   }
@@ -192,5 +206,43 @@ task variantCalling {
     File vcfFile = "~{vcfName}"
     File consensusFasta = "~{fastaName}"
     File variantOnlyVcf = "~{variantOnlyVcf_}"
+  }
+}
+
+task blast2ReferenceSequence {
+  input {
+    String modules = "blast"
+    File reference
+    File consensusFasta
+    String sample
+    Int mem = 8
+    Int timeout = 72
+  }
+
+  command <<<
+    set -euo pipefail
+
+    # Suppress error for negative controls or samples with very little reads
+    if blastn -query ~{consensusFasta} -subject ~{reference} \
+    -word_size 28 -reward 1 -penalty -2 -dust no > ~{sample}_bl2seq_report.txt 2>error.log; then
+        echo 'blastn completed successfully' 1>&2
+    elif grep -q -F 'BLAST engine error: Warning: Sequence contains no data' error.log; then
+        # Copy the message to STDERR, and exit without an error status
+        cat error.log 1>&2
+    else
+        echo 'Unexpected error' 1>&2
+        cat error.log 1>&2
+        exit 1
+    fi
+  >>>
+
+  runtime {
+    memory: "~{mem} GB"
+    modules: "~{modules}"
+    timeout: "~{timeout}"
+  }
+
+  output {
+    File bl2seqReport = "~{sample}_bl2seq_report.txt"
   }
 }
