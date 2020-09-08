@@ -4,8 +4,10 @@ workflow providencePipeline {
 input {
     File fastq1
     File fastq2
-		File ref
+    File ref
     String samplePrefix
+    String sampleLibrary
+    String sampleFlowcell
   }
 
   parameter_meta {
@@ -80,6 +82,19 @@ input {
       reference = ref
   }
 
+  call qcStats {
+    input:
+      sample = samplePrefix,
+      bam = bwa.bwaMappedBam
+  }
+
+  call runReport {
+    input:
+      sample = samplePrefix,
+      library = sampleLibrary,
+      flowcell = sampleFlowcell
+  }
+
   output {
     File bam = bwa.bwaMappedBam
     File bai = bwa.bwaMappedBai
@@ -87,6 +102,9 @@ input {
     File consensusFasta = variantCalling.consensusFasta
     File variantOnlyVcf = variantCalling.variantOnlyVcf
     File bl2seqReport = blast2ReferenceSequence.bl2seqReport
+    File alignmentStats = qcStats.alignmentStats
+    File bbMaplog = bbMap.bbMapLog
+    File report = runReport.rmarkdownReport
   }
 }
 
@@ -110,7 +128,7 @@ task bbMap {
     bbmap bbduk in1=~{fastq1} in2=~{fastq2} \
     out1=~{sample}_qad_r1.fastq.gz out2=~{sample}_qad_r2.fastq.gz \
     ref=~{reference} \
-    ktrim=r k=23 mink=11 hdist=1 tpe tbo qtrim=rl trimq=~{trimq}
+    ktrim=r k=23 mink=11 hdist=1 tpe tbo qtrim=rl trimq=~{trimq} 2>~{sample}_bbmap.log
   >>>
 
   runtime {
@@ -122,6 +140,7 @@ task bbMap {
   output {
     File out1 = "~{sample}_qad_r1.fastq.gz"
     File out2 = "~{sample}_qad_r2.fastq.gz"
+    File bbMapLog = "~{sample}_bbmap.log"
   }
 }
 
@@ -246,3 +265,63 @@ task blast2ReferenceSequence {
     File bl2seqReport = "~{sample}_bl2seq_report.txt"
   }
 }
+
+task qcStats {
+  input {
+    String modules = "bedtools samtools/1.9"
+    String sample
+    File bam
+    Int mem = 8
+    Int timeout = 72
+  }
+
+  command <<<
+    set -euo pipefail
+
+    bedtools genomecov -ibam ~{bam} > ~{sample}.genomecvghist.txt
+
+    bedtools genomecov -d -ibam ~{bam} > ~{sample}.genome.cvgperbase.txt
+
+    samtools stats ~{bam} > ~{sample}.samstats.txt
+  >>>
+
+  runtime {
+    memory: "~{mem} GB"
+    modules: "~{modules}"
+    timeout: "~{timeout}"
+  }
+
+  output {
+    File genomecvgHist = "~{sample}.genomecvghist.txt"
+    File genomecvgPerBase = "~{sample}.genome.cvgperbase.txt"
+    File alignmentStats = "~{sample}.samstats.txt"
+  }
+}
+
+
+task runReport {
+  input {
+    String modules = "rmarkdown/0.1"
+    String sample
+    String flowcell
+    String library
+    Int mem = 8
+    Int timeout = 72
+  }
+
+  command <<<
+    set -euo pipefail
+   
+  Rscript -e "rmarkdown::render('~/git/providencePipeline/rmarkdownProvidence.Rmd', params=list(ext='mPVT-S5000 B0011',sample='~{sample}',library='~{library}',flowcell='~{flowcell}'), output_file='~{sample}.rmarkdown')"
+  >>>
+
+  runtime {
+    memory: "~{mem} GB"
+    modules: "~{modules}"
+    timeout: "~{timeout}"
+  }
+
+  output {
+    File rmarkdownReport = "~{sample}.rmarkdown.pdf"
+  }
+} 
