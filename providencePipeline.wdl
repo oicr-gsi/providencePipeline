@@ -8,6 +8,7 @@ input {
     String samplePrefix
     String sampleLibrary
     String sampleFlowcell
+    String sampleExt
   }
 
   parameter_meta {
@@ -49,6 +50,10 @@ input {
       {
         name: "blast/2.8.1",
         url: "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.9.0/ncbi-blast-2.9.0+-x64-linux.tar.gz"
+      },
+      {
+        name: "rmarkdown/2.3",
+        url: "https://cran.r-project.org/web/packages/rmarkdown/index.html"
       }
     ]
   }
@@ -92,7 +97,15 @@ input {
     input:
       sample = samplePrefix,
       library = sampleLibrary,
-      flowcell = sampleFlowcell
+      flowcell = sampleFlowcell,
+      reference = ref,
+      bl2seqReport = blast2ReferenceSequence.bl2seqReport,
+      consensusFasta = variantCalling.consensusFasta,
+      vcf = variantCalling.vcfFile,
+      bbmapLog = bbMap.bbMapLog,
+      samStats = qcStats.alignmentStats,
+      readDistStats = qcStats.readDistStats,
+      insertSizeStats = qcStats.insertSizeStats
   }
 
   output {
@@ -103,8 +116,12 @@ input {
     File variantOnlyVcf = variantCalling.variantOnlyVcf
     File bl2seqReport = blast2ReferenceSequence.bl2seqReport
     File alignmentStats = qcStats.alignmentStats
+    File readDistStats = qcStats.readDistStats
+    File insertSizeStats = qcStats.insertSizeStats
     File bbMaplog = bbMap.bbMapLog
     File report = runReport.rmarkdownReport
+    File readDistStats = qcStats.readDistStats
+    File insertSizeStats = qcStats.insertSizeStats
   }
 }
 
@@ -268,7 +285,7 @@ task blast2ReferenceSequence {
 
 task qcStats {
   input {
-    String modules = "bedtools samtools/1.9"
+    String modules = "bedtools samtools/1.9 picard/2.21.2"
     String sample
     File bam
     Int mem = 8
@@ -283,7 +300,12 @@ task qcStats {
     bedtools genomecov -d -ibam ~{bam} > ~{sample}.genome.cvgperbase.txt
 
     samtools stats ~{bam} > ~{sample}.samstats.txt
-  >>>
+ 
+    java -jar $PICARD_ROOT/picard.jar CollectInsertSizeMetrics I=~{bam} O=~{sample}.insert_size_metrics.txt H=insert_size_histogram.pdf M=0.5
+    
+    samtools view ~{bam}| cut -f 10 | perl -ne 'chomp;print length($_) . "\n"' | sort | uniq -c >read_dist.txt.tmp
+    awk 'BEGIN{ OFS="\t"}{ print $1, $2}' read_dist.txt.tmp >~{sample}.read_dist.txt
+   >>>
 
   runtime {
     memory: "~{mem} GB"
@@ -295,6 +317,8 @@ task qcStats {
     File genomecvgHist = "~{sample}.genomecvghist.txt"
     File genomecvgPerBase = "~{sample}.genome.cvgperbase.txt"
     File alignmentStats = "~{sample}.samstats.txt"
+    File readDistStats = "~{sample}.read_dist.txt"
+    File insertSizeStats = "~{sample}.insert_size_metrics.txt"
   }
 }
 
@@ -305,14 +329,24 @@ task runReport {
     String sample
     String flowcell
     String library
+    String reference
+    File consensusFasta
+    String bl2seqReport
+    String bbmapLog
+    String samStats
+    String vcf
+    String readDistStats
+    String insertSizeStats
+    String json = "~{sample}.report.json"
     Int mem = 8
     Int timeout = 72
   }
 
   command <<<
     set -euo pipefail
-   
-  Rscript -e "rmarkdown::render('~/git/providencePipeline/rmarkdownProvidence.Rmd', params=list(ext='mPVT-S5000 B0011',sample='~{sample}',library='~{library}',flowcell='~{flowcell}'), output_file='~{sample}.rmarkdown')"
+    perl ~/git/providencePipeline/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference}>~{json}
+    cp ~/git/providencePipeline/rmarkdownProvidence.Rmd .
+    Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='mPVT-S5000 B0011',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}', blast='~{bl2seqReport}', json='~{json}'), output_file='~{sample}.rmarkdown.pdf')"
   >>>
 
   runtime {

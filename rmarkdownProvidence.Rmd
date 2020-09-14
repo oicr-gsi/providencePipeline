@@ -1,0 +1,226 @@
+---
+title: |
+  ![](/u/ysundaravadanam/git/providencePipeline/OICR.png){width=1in}
+  Providence Therapeutics Draft Report
+author: "GSI Bioinformatic Support"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+params:
+  sample: ""
+  library: ""
+  flowcell: ""
+  reference: ""
+  ext: ""
+  blast: ""
+  refpath: ""
+  construct: ""
+  json: ""
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.pos= "H")
+
+library(rjson)
+jfile<-params$json
+info<-fromJSON(file=jfile)
+```
+
+\fontfamily{lmr}\selectfont
+
+OICR Sample: **`r params$sample`**
+\newline
+OICR Library: **`r params$library`**
+\newline
+External Name: **`r params$ext`**
+\newline
+Run: **`r params$flowcell`**
+
+## \textcolor{blue}{Summary}
+The consensus sequence was generated from the aligned reads using Bcftools.This consensus sequence contains the variants determined by the reads.
+
+The consensus sequence matches the reference sequence with **`r info$Consensus`** sequencing identity.
+\newline
+
+## \textcolor{blue}{Mutations}
+
+The presence of mutations was investigated using bcftools variant calling algorithm. **`r info$Variants`** 
+\newline
+
+## \textcolor{blue}{Consensus}
+
+Query: **`r params$library`**
+Sbjct: **`r params$library`**
+
+``` {r blast_seq, echo=FALSE, engine='bash', comment=''}
+cat blast.txt
+
+```
+\leavevmode\newline
+
+## \textcolor{blue}{Consensus of the Construct}
+The DNA construct was also sequenced and a consensus sequence was generated from the aligned reads using Bcftools. The consensus reference sequence matches the reference sequence with 100% sequencing identity. Please refer to the **`r params$construct`** report for more information.
+\newline
+
+\fontfamily{lmr}\selectfont
+## \textcolor{blue}{Sequencing Summary}
+Table below shows the run summary information for the analyzed sample:
+\newline
+
+``` {r summary, echo=FALSE, warning=FALSE}
+library(rjson)
+library(knitr)
+library(kableExtra)
+
+get_summary_table<-function(s){
+  summary<-as.data.frame(unlist(s))
+  s_data<-summary[c("RawReads","AdapterTrimmedReads", "AdapterTrimmedBases","PassedReads", "MappedReads", "MappedPercent", "MeanReadLength", "MeanInsertSize", "InserSizeSD"),,drop=F]
+  s.df<-data.frame(V1=rownames(s_data),V2=s_data[,1])
+
+  return(s.df)
+}
+
+summary_table<-get_summary_table(info$Stats)
+kable(summary_table, col.names = NULL, row.names = FALSE, "latex", booktabs = T)
+```
+##  \textcolor{blue}{Read Length Distribution}
+
+```{r read_dist, echo=FALSE, out.width = '65%'}
+library(ggplot2)
+#plotgraph<-read.table("read_dist.txt", header=TRUE, sep="\t")
+#ggplot(plotgraph,aes(Read_Length,Count))+geom_bar(stat="identity") +labs(title="Read Length Distribution")
+```
+
+##  \textcolor{blue}{Insert Size Distribution}
+```{r insert_size_dist, echo=FALSE, out.width = '65%'}
+```
+
+##  \textcolor{blue}{High-quality Bases [>Q13]}
+
+```{r genome_fracture_coverage, echo=FALSE, out.width = '65%'}
+library(ggplot2)
+library(ggpubr)
+theme_set(theme_pubr())
+plotgraph<-read.table("depth.txt", header=TRUE, sep="\t")
+a<-ggplot(plotgraph, aes(x = Position, y = Depth, group=1)) + geom_line() + labs(title="Coverage") + ylab("Depth")
+b<-ggplot(plotgraph, aes(x = Position, y = ErrorPercent, group=1)) + geom_line() + labs(title="Error Rate")+ scale_y_continuous(limits = c(0, 100))
+figure <- ggarrange(a, b,
+                    labels = c("A", "B"),
+                    ncol = 1, nrow = 2)
+figure
+```
+##  \textcolor{blue}{Error Distribution}
+
+```{r error_dist, echo=FALSE, warning=FALSE, out.width = '65%'}
+library(ggplot2)
+plotgraph<-read.table("depth.txt", header=TRUE, sep="\t")
+ggplot(plotgraph, aes(x=ErrorPercent)) + geom_histogram(binwidth=.01)+ scale_x_continuous(limits = c(0, 1))+geom_vline(aes(xintercept=mean(ErrorPercent)),color="blue", linetype="dashed", size=1)
+
+```
+The average error rate was **`r params$ErrorPercent`**
+
+``` {r error, echo=FALSE, warning=FALSE}
+library(knitr)
+library(kableExtra)
+
+get_summary_table<-function(s){
+  summary<-as.data.frame(unlist(s))
+  s_data<-summary[c("0","0-0.2","0.2-0.3", "0.3-0.4", "0.4-0.5", "0.5-1", ">1"),,drop=F]
+  s.df<-data.frame(V1=rownames(s_data),V2=s_data[,1])
+
+  return(s.df)
+}
+
+summary_table<-get_summary_table(info$Error)
+kable(summary_table, col.names = c('Error', 'Count'), row.names = FALSE,  "latex", booktabs = T)
+```
+\leavevmode\newline
+
+Error locations greater than 1%:
+``` {r error_gt_1.0, echo=FALSE, warning=FALSE}
+library(knitr)
+library(kableExtra)
+
+ summary_table<-read.table("error_gt_1.0.txt",header=TRUE,sep="\t")
+ kable(summary_table, col.names = colnames(summary_table), row.names = FALSE,  "latex", booktabs = T, longtable = TRUE)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+\leavevmode\newline
+
+## \textcolor{blue}{Reference sequence}
+
+  ``` {r seq, echo=FALSE, warning=FALSE}
+library(rjson)
+library(knitr)
+library(kableExtra)
+
+get_summary_table<-function(s){
+  summary<-as.data.frame(unlist(s))
+  s_data<-summary[c("A","G","C","T"),,drop=F]
+  s.df<-data.frame(V1=rownames(s_data),V2=s_data[,1])
+
+  return(s.df)
+}
+
+summary_table<-get_summary_table(info$Seq)
+kable(summary_table, col.names = c('Base', 'Count'), row.names = FALSE,  "latex", booktabs = T) 
+
+```
+Total Bases:`r info$TotalBases`
+\newline
+
+ \fontfamily{lmtt}\selectfont
+
+**`r params$ext`** reference provided by Providence Therapeutics
+```{r fastq_seq, echo=FALSE, warning=FALSE, comment=NA, fig.align='left' }
+library(knitr)
+
+
+formatDNA<-function(fasta.file){
+  dna<-scan(fasta.file,what="character")
+  dna<-dna[-1]
+  dna<-paste(dna,collapse="")
+
+  dna.lines<-strsplit(dna, '(?<=.{60})', perl = TRUE)[[1]]
+  ### set the positions
+  n<-60
+  names(dna.lines)<-seq(from=1,by=n,length.out=length(dna.lines))
+  dna.df<-as.data.frame(dna.lines)
+
+  dna.chunked<-apply(dna.df,1,function(x){paste(strsplit(x, "(?<=.{10})", perl = TRUE)[[1]],collapse=" ")})
+  dna.chunked.df<-as.data.frame(dna.chunked)
+  colnames(dna.chunked.df)<-NULL
+  dna.chunked.df
+}
+
+fasta.file<-params$refpath
+dna<-formatDNA(fasta.file)
+print(dna,right=FALSE)
+```
+\newpage
+## \textcolor{blue}{Glossary}
+AdapterTrimmedBases: Total number of adapter trimmed bases.
+\newline
+AdapterTrimmedReads: Total number of adapter trimmed reads. Adapters ligated to the DNA molecule during library preparation can be present at the 3’ end of the reads and needs to be trimmed.
+\newline
+Bit-score: A log-scaled version of a score that measures sequence similarity independent of query sequence length and database size.
+\newline
+E-Value (Except): the number of expected hits of similar quality score that could be found just by chance. The lower the E value, the more significant the score is
+\newline
+InsertSizeSD: Standard deviation for the average template length distribution.
+\newline
+MappedReads: Total number of paired-end reads that are mapped
+\newline
+MappingPercent: Mapping percent of the mapped paired-end reads
+\newline
+MeanInsertSize: The average absolute template length for paired and mapped reads.
+\newline
+MeanReadLength: Ratio between total length and sequences.
+\newline
+Paired-end: Two ends of the same DNA molecule
+\newline
+PassedReads: Total number of reads used in the analysis
+\newline
+RawReads: Total number of raw reads
+\newline
+Score: A numerical value that describes the overall quality of an alignment. Higher numbers correspond to higher similarity.
