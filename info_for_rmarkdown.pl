@@ -10,6 +10,8 @@ my $samstats=$ARGV[1];
 my $vcf=$ARGV[2];
 my $blast =$ARGV[3];
 my $refseq = $ARGV[4];
+my $insertsizedist = $ARGV[5];
+my $orf=$ARGV[6];
 my %info;
 
 
@@ -93,7 +95,7 @@ foreach my $line (@data){
 close FH;
 my $error_mean=$error_percent_total/$count;
 my $round=sprintf("%.2f", $error_mean);
-$info{"ErrorPerent"}=$round;
+$info{"ErrorPercent"}=$round;
 
 my @depth=`cat depth.txt`;
 open(my $fh2, '>', 'error_gt_1.0.txt');
@@ -182,6 +184,51 @@ $info{"Seq"}{"C"}="$Ccount ($round%)";
 $round=calc_pert($total,$Tcount);
 $info{"Seq"}{"T"}="$Tcount ($round%)";
 $info{"TotalBases"}="$total";
+
+my @insertsizedata=`cat $insertsizedist`;
+my $counter=0;
+foreach my $line (@insertsizedata){
+	if ($line =~/^insert_size/){
+		my $ioutput = 'insert_size.txt';
+		open(IFH, '>', $ioutput) or die $!;
+		print IFH "Insert_Size\tRead_Count\n";
+		for(my $i=$counter+1; $i<@insertsizedata; $i++){
+				print IFH "$insertsizedata[$i]";
+			}
+		}
+		$counter++;
+}
+
+
+my @orfdata=`cat $orf`;
+system("ln -s $orf orf.txt");
+my $orfout = 'orf_summary.txt';
+open(OFH, '>', $orfout) or die $!;
+print OFH "ORF\tStart\tStop\tOrientation\tLength\n";
+foreach my $line (@orfdata){
+	chomp $line;
+	my $orf;
+	if($line =~ /^\>/){
+		my @info=split(" ", $line);
+		if ($info[0] =~ /.*_(\d+)$/){
+			$orf=$1;
+		}
+		$info[1] =~ s/\[//g;
+		$info[3] =~ s/\]//g;
+		my $len=$info[3]-$info[1];
+		my $absolute=abs($len);
+		my $aa=($absolute+1)/3;
+		print OFH "$orf\t$info[1]\t$info[3]\t";
+		if ($info[4] =~ /REVERSE/){
+			print OFH "REVERSE STRAND\t";
+		}
+		else{
+			print OFH "FORWARD STRAND\t";
+		}
+
+		print OFH "$aa\n";
+	}
+}
 
 #print Dumper \%info;
 my $json=encode_json(\%info);

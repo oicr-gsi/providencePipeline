@@ -1,6 +1,7 @@
 ---
 title: |
   ![](/u/ysundaravadanam/git/providencePipeline/OICR.png){width=1in}
+
   Providence Therapeutics Draft Report
 author: "GSI Bioinformatic Support"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
@@ -15,6 +16,7 @@ params:
   refpath: ""
   construct: ""
   json: ""
+  readdist: ""
 
 ---
 
@@ -44,7 +46,7 @@ The consensus sequence matches the reference sequence with **`r info$Consensus`*
 
 ## \textcolor{blue}{Mutations}
 
-The presence of mutations was investigated using bcftools variant calling algorithm. **`r info$Variants`** 
+The presence of mutations was investigated using bcftools variant calling algorithm. `r info$Variants` 
 \newline
 
 ## \textcolor{blue}{Consensus}
@@ -58,8 +60,27 @@ cat blast.txt
 ```
 \leavevmode\newline
 
+
+## \textcolor{blue}{ORF Summary}
+
+Open Reading Frames was searched using EMBOSS tools. `r info$ORFs`
+
+``` {r orf_summary, echo=FALSE, warning=FALSE}
+library(knitr)
+library(kableExtra)
+
+ summary_table<-read.table("orf_summary.txt",header=TRUE,sep="\t")
+ kable(summary_table, col.names = colnames(summary_table), row.names = FALSE,  "latex", booktabs = T, longtable = TRUE)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+```
+
+```{r orf, echo=FALSE, engine='bash', comment=''}
+cat orf.txt
+```
+
 ## \textcolor{blue}{Consensus of the Construct}
-The DNA construct was also sequenced and a consensus sequence was generated from the aligned reads using Bcftools. The consensus reference sequence matches the reference sequence with 100% sequencing identity. Please refer to the **`r params$construct`** report for more information.
+The DNA construct was sequenced and a consensus sequence was generated from the aligned reads using Bcftools. The consensus reference sequence matches the reference sequence with 100% sequencing identity. Please refer to the **`r params$construct`** report for more information.
 \newline
 
 \fontfamily{lmr}\selectfont
@@ -85,19 +106,22 @@ kable(summary_table, col.names = NULL, row.names = FALSE, "latex", booktabs = T)
 ```
 ##  \textcolor{blue}{Read Length Distribution}
 
-```{r read_dist, echo=FALSE, out.width = '65%'}
+```{r read_dist, echo=FALSE, out.width = '80%'}
 library(ggplot2)
-#plotgraph<-read.table("read_dist.txt", header=TRUE, sep="\t")
-#ggplot(plotgraph,aes(Read_Length,Count))+geom_bar(stat="identity") +labs(title="Read Length Distribution")
+plotgraph<-read.table("readdist.txt", header=TRUE, sep="\t")
+ggplot(plotgraph,aes(Read_Length,Count))+geom_bar(stat="identity") +labs(title="Read Length Distribution")
 ```
 
 ##  \textcolor{blue}{Insert Size Distribution}
-```{r insert_size_dist, echo=FALSE, out.width = '65%'}
+```{r insert_size_dist, echo=FALSE, out.width = '80%'}
+library(ggplot2)
+plotgraph<-read.table("insert_size.txt", header=TRUE, sep="\t")
+ggplot(plotgraph,aes(Insert_Size,Read_Count))+geom_bar(stat="identity") +labs(title="Insert Size Distribution")
 ```
 
 ##  \textcolor{blue}{High-quality Bases [>Q13]}
 
-```{r genome_fracture_coverage, echo=FALSE, out.width = '65%'}
+```{r genome_fracture_coverage, echo=FALSE, comment='', out.width = '80%'}
 library(ggplot2)
 library(ggpubr)
 theme_set(theme_pubr())
@@ -109,15 +133,18 @@ figure <- ggarrange(a, b,
                     ncol = 1, nrow = 2)
 figure
 ```
+\leavevmode\newline
+
 ##  \textcolor{blue}{Error Distribution}
 
-```{r error_dist, echo=FALSE, warning=FALSE, out.width = '65%'}
+```{r error_dist, echo=FALSE, warning=FALSE, out.width = '80%'}
 library(ggplot2)
 plotgraph<-read.table("depth.txt", header=TRUE, sep="\t")
 ggplot(plotgraph, aes(x=ErrorPercent)) + geom_histogram(binwidth=.01)+ scale_x_continuous(limits = c(0, 1))+geom_vline(aes(xintercept=mean(ErrorPercent)),color="blue", linetype="dashed", size=1)
 
 ```
-The average error rate was **`r params$ErrorPercent`**
+\leavevmode\newline
+The average error rate was **`r info$ErrorPercent`**
 
 ``` {r error, echo=FALSE, warning=FALSE}
 library(knitr)
@@ -198,6 +225,7 @@ dna<-formatDNA(fasta.file)
 print(dna,right=FALSE)
 ```
 \newpage
+\fontfamily{lmr}\selectfont
 ## \textcolor{blue}{Glossary}
 AdapterTrimmedBases: Total number of adapter trimmed bases.
 \newline

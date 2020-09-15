@@ -9,13 +9,18 @@ input {
     String sampleLibrary
     String sampleFlowcell
     String sampleExt
+    String sampleConstruct
   }
 
   parameter_meta {
     fastq1: "Read 1 fastq file, gzipped. Can be either targeted or whole transcriptome"
     fastq2: "Read 2 fastq file, gzipped. Can be either targeted or whole transcriptome."
     samplePrefix: "Prefix for output files"
-    ref: "reference to be used for alignment"
+    sampleLibary: "Library name of the transcriptome"
+    sampleFlowcell: "Flowcell name"
+    sampleExt: "External name provided for this library"
+    ref: "Reference to be used for alignment"
+    construct: "Library name of the construct used"
   }
 
   meta {
@@ -93,19 +98,27 @@ input {
       bam = bwa.bwaMappedBam
   }
 
+  call orfStats {
+     input:
+      consensusFasta = variantCalling.consensusFasta,
+      sample = samplePrefix
+  }
+
   call runReport {
     input:
       sample = samplePrefix,
       library = sampleLibrary,
       flowcell = sampleFlowcell,
       reference = ref,
+      construct = sampleConstruct,
       bl2seqReport = blast2ReferenceSequence.bl2seqReport,
       consensusFasta = variantCalling.consensusFasta,
       vcf = variantCalling.vcfFile,
       bbmapLog = bbMap.bbMapLog,
       samStats = qcStats.alignmentStats,
       readDistStats = qcStats.readDistStats,
-      insertSizeStats = qcStats.insertSizeStats
+      insertSizeStats = qcStats.insertSizeStats,
+      orf = orfStats.orf
   }
 
   output {
@@ -122,6 +135,7 @@ input {
     File report = runReport.rmarkdownReport
     File readDistStats = qcStats.readDistStats
     File insertSizeStats = qcStats.insertSizeStats
+    File orf = orfStats.orf
   }
 }
 
@@ -303,7 +317,8 @@ task qcStats {
  
     java -jar $PICARD_ROOT/picard.jar CollectInsertSizeMetrics I=~{bam} O=~{sample}.insert_size_metrics.txt H=insert_size_histogram.pdf M=0.5
     
-    samtools view ~{bam}| cut -f 10 | perl -ne 'chomp;print length($_) . "\n"' | sort | uniq -c >read_dist.txt.tmp
+    printf "Count\tRead_Length\n">read_dist.txt.tmp
+    samtools view ~{bam}| cut -f 10 | perl -ne 'chomp;print length($_) . "\n"' | sort | uniq -c >>read_dist.txt.tmp
     awk 'BEGIN{ OFS="\t"}{ print $1, $2}' read_dist.txt.tmp >~{sample}.read_dist.txt
    >>>
 
@@ -322,6 +337,29 @@ task qcStats {
   }
 }
 
+task orfStats {
+  input {
+    String sample
+    String consensusFasta
+    Int mem = 8
+    Int timeout = 72
+  }
+
+  command <<<
+    set -euo pipefail
+   
+    /.mounts/labs/gsiprojects/external/Providence/pipeline/emboss/EMBOSS-6.6.0/emboss/getorf --minsize 150 ~{consensusFasta} -out ~{sample}.orf
+   >>>
+
+  runtime {
+    memory: "~{mem} GB"
+    timeout: "~{timeout}"
+  }
+
+  output {
+    File orf = "~{sample}.orf"
+  }
+}
 
 task runReport {
   input {
@@ -337,6 +375,8 @@ task runReport {
     String vcf
     String readDistStats
     String insertSizeStats
+    String construct
+    String orf
     String json = "~{sample}.report.json"
     Int mem = 8
     Int timeout = 72
@@ -344,9 +384,10 @@ task runReport {
 
   command <<<
     set -euo pipefail
-    perl ~/git/providencePipeline/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference}>~{json}
+    perl ~/git/providencePipeline/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference} ~{insertSizeStats} ~{orf} >~{json}
     cp ~/git/providencePipeline/rmarkdownProvidence.Rmd .
-    Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='mPVT-S5000 B0011',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}', blast='~{bl2seqReport}', json='~{json}'), output_file='~{sample}.rmarkdown.pdf')"
+    cp ~{readDistStats} readdist.txt
+    Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='mPVT-S5000 B0011',construct='~{construct}',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}', blast='~{bl2seqReport}', readdist='~{readDistStats}',json='~{json}'), output_file='~{sample}.rmarkdown.pdf')"
   >>>
 
   runtime {
