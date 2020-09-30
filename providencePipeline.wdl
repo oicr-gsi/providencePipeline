@@ -133,6 +133,7 @@ input {
     File insertSizeStats = qcStats.insertSizeStats
     File bbMaplog = bbMap.bbMapLog
     File report = runReport.rmarkdownReport
+    File reportScript = runReport.scriptRmarkdown
     File readDistStats = qcStats.readDistStats
     File insertSizeStats = qcStats.insertSizeStats
     File orf = orfStats.orf
@@ -339,6 +340,7 @@ task qcStats {
 
 task orfStats {
   input {
+    String modules = "emboss/6.6.0"
     String sample
     String consensusFasta
     Int mem = 8
@@ -348,11 +350,12 @@ task orfStats {
   command <<<
     set -euo pipefail
    
-    /.mounts/labs/gsiprojects/external/Providence/pipeline/emboss/EMBOSS-6.6.0/emboss/getorf --minsize 150 ~{consensusFasta} -out ~{sample}.orf
+    getorf --minsize 150 ~{consensusFasta} -out ~{sample}.orf
    >>>
 
   runtime {
     memory: "~{mem} GB"
+    modules: "~{modules}"
     timeout: "~{timeout}"
   }
 
@@ -363,7 +366,7 @@ task orfStats {
 
 task runReport {
   input {
-    String modules = "rmarkdown/0.1"
+    String modules = "rmarkdown/0.1 pt-report-tools/1.0"
     String sample
     String flowcell
     String library
@@ -384,11 +387,12 @@ task runReport {
 
   command <<<
     set -euo pipefail
-    perl ~/git/providencePipeline/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference} ~{insertSizeStats} ~{orf} >~{json}
-    cp ~/git/providencePipeline/rmarkdownProvidence.Rmd .
+    perl $PT_REPORT_TOOLS_ROOT/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference} ~{insertSizeStats} ~{orf} >~{json}
+    cp $PT_REPORT_TOOLS_ROOT/rmarkdownProvidence.Rmd .
     cp ~{readDistStats} readdist.txt
     Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='mPVT-S5000 B0011',construct='~{construct}',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}', blast='~{bl2seqReport}', readdist='~{readDistStats}',json='~{json}'), output_file='~{sample}.rmarkdown.pdf')"
-  >>>
+    tar -cvhf ~{sample}.scriptRmarkdown.tar.gz *json *pdf *.txt *.Rmd script
+   >>>
 
   runtime {
     memory: "~{mem} GB"
@@ -398,5 +402,6 @@ task runReport {
 
   output {
     File rmarkdownReport = "~{sample}.rmarkdown.pdf"
+    File scriptRmarkdown = "~{sample}.scriptRmarkdown.tar.gz"
   }
 } 

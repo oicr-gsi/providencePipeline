@@ -4,6 +4,7 @@
 "providencePipeline.sampleLibrary": "PTRS_0001_nn_U_PE_475_WT",
 "providencePipeline.fastq1": "/.mounts/labs/gsi/testdata/providencePipeline/input_data/SWID_15558553_PTRS_0001_nn_U_PE_475_WT_120519_RB009_191212_M00753_0197_000000000-D7KV7_ATCGATCG-TGCTTCCA_L001_R1_001.fastq.gz",
 "providencePipeline.fastq2": "/.mounts/labs/gsi/testdata/providencePipeline/input_data/SWID_15558553_PTRS_0001_nn_U_PE_475_WT_120519_RB009_191212_M00753_0197_000000000-D7KV7_ATCGATCG-TGCTTCCA_L001_R2_001.fastq.gz",
-"providencePipeline.ref": "/.mounts/labs/gsi/testdata/providencePipeline/input_data/lfPVT-S5000.fa"
-"providencePipeline.sampleConstruct": "PTRS_0002_nn_U_PE_718_WG"
+"providencePipeline.ref": "/.mounts/labs/gsi/testdata/providencePipeline/input_data/lfPVT-S5000.fa",
+"providencePipeline.sampleConstruct": "PTRS_0002_nn_U_PE_718_WG",
+"providencePipeline.sampleExt": "mPVT-S5000 B009"
 }

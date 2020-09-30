@@ -2,7 +2,7 @@
 title: |
   ![](/u/ysundaravadanam/git/providencePipeline/OICR.png){width=1in}
 
-  Providence Therapeutics Draft Report
+  Providence Therapeutics Report
 author: "GSI Bioinformatic Support"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
@@ -51,7 +51,7 @@ The presence of mutations was investigated using bcftools variant calling algori
 
 ## \textcolor{blue}{Consensus}
 
-Query: **`r params$library`**
+Query: **`r params$ext`**
 Sbjct: **`r params$library`**
 
 ``` {r blast_seq, echo=FALSE, engine='bash', comment=''}
