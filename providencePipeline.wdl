@@ -463,7 +463,7 @@ task runReport {
     flowcell: "Flowcell the sample was run on"
     library: "Library name of the sample"
     reference: "File path of the reference used for alignment"
-    consensusFastq: "File path of the consensus generated"
+    consensusFasta: "File path of the consensus generated"
     bl2seqReport: "File path of the blast report"
     bbmapLog: "File path of the bbmap log file"
     samStats: "File path of the samtools stats file"
