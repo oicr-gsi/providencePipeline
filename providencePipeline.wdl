@@ -107,6 +107,7 @@ input {
   call runReport {
     input:
       sample = samplePrefix,
+      ext = sampleExt,
       library = sampleLibrary,
       flowcell = sampleFlowcell,
       reference = ref,
@@ -116,7 +117,7 @@ input {
       vcf = variantCalling.vcfFile,
       bbmapLog = bbMap.bbMapLog,
       samStats = qcStats.alignmentStats,
-      readDistStats = qcStats.readDistStats,
+      readDistStatsfile = qcStats.readDistStats,
       insertSizeStats = qcStats.insertSizeStats,
       orf = orfStats.orf
   }
@@ -368,6 +369,7 @@ task runReport {
   input {
     String modules = "rmarkdown/0.1 pt-report-tools/1.0"
     String sample
+    String ext
     String flowcell
     String library
     String reference
@@ -376,7 +378,7 @@ task runReport {
     String bbmapLog
     String samStats
     String vcf
-    String readDistStats
+    String readDistStatsfile
     String insertSizeStats
     String construct
     String orf
@@ -389,8 +391,8 @@ task runReport {
     set -euo pipefail
     perl $PT_REPORT_TOOLS_ROOT/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference} ~{insertSizeStats} ~{orf} >~{json}
     cp $PT_REPORT_TOOLS_ROOT/rmarkdownProvidence.Rmd .
-    cp ~{readDistStats} readdist.txt
-    Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='mPVT-S5000 B0011',construct='~{construct}',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}', blast='~{bl2seqReport}', readdist='~{readDistStats}',json='~{json}'), output_file='~{sample}.rmarkdown.pdf')"
+    cp ~{readDistStatsfile} readdist.txt
+    Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='~{ext}',construct='~{construct}',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}', blast='~{bl2seqReport}', readdist='~{readDistStatsfile}',json='~{json}'), output_file='~{sample}.rmarkdown.pdf')"
     tar -cvhf ~{sample}.scriptRmarkdown.tar.gz *json *pdf *.txt *.Rmd script
    >>>
 
