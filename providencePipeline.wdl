@@ -357,7 +357,7 @@ task blast2ReferenceSequence {
 
 task qcStats {
   input {
-    String modules = "bedtools samtools/1.9 picard/2.21.2"
+    String modules = "bedtools/2.27 samtools/1.9 picard/2.21.2 rstats/3.6"
     String sample
     File bam
     Int mem = 8
