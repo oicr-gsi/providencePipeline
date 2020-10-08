@@ -438,7 +438,7 @@ task orfStats {
 
 task runReport {
   input {
-    String modules = "rmarkdown/0.1 pt-report-tools/1.1 rstats"
+    String modules = "bis-rlibs rmarkdown/0.1 pt-report-tools/1.1"
     String sample
     String ext
     String flowcell
