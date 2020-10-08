@@ -438,7 +438,7 @@ task orfStats {
 
 task runReport {
   input {
-    String modules = "rmarkdown/0.1 pt-report-tools/1.1.1"
+    String modules = "rmarkdown/0.1 pt-report-tools/1.1.2"
     String sample
     String ext
     String flowcell
@@ -483,6 +483,7 @@ task runReport {
     set -euo pipefail
     perl $PT_REPORT_TOOLS_ROOT/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference} ~{insertSizeStats} ~{orf} >~{json}
     cp $PT_REPORT_TOOLS_ROOT/rmarkdownProvidence.Rmd .
+    cp $PT_REPORT_TOOLS_ROOT/OICR.png .
     cp ~{readDistStats} readdist.txt
     Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='~{ext}',construct='~{construct}',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}',refname='~{basename(reference)}', blast='~{bl2seqReport}', readdist='~{readDistStats}',json='~{json}'), output_file='~{sample}.rmarkdown.pdf')"
     tar -cvhf ~{sample}.scriptRmarkdown.tar.gz *json *pdf *.txt *.Rmd script

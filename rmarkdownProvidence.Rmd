@@ -1,9 +1,9 @@
 ---
 title: |
-  ![](/u/ysundaravadanam/git/providencePipeline/OICR.png){width=1in}
+  ![](./OICR.png){width=1in}
 
   Providence Therapeutics Report
-author: "GSI Bioinformatic Support"
+author: "GSI Bioinformatics Support"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 params:
@@ -11,6 +11,7 @@ params:
   library: ""
   flowcell: ""
   reference: ""
+  refname: ""
   ext: ""
   blast: ""
   refpath: ""
@@ -50,8 +51,8 @@ The presence of mutations was investigated using bcftools variant calling algori
 \newline
 
 ## \textcolor{blue}{Consensus}
-
-Query: **`r params$ext`**
+Query: **`r params$refname`**
+\newline
 Sbjct: **`r params$library`**
 
 ``` {r blast_seq, echo=FALSE, engine='bash', comment=''}
