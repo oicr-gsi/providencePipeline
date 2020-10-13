@@ -3,7 +3,7 @@
     "description": "myWorkflow workflow test",
     "metrics_calculate": "calculate.sh",
     "metrics_compare": "compare.sh",
-    "output_metrics_dir": "/.mounts/labs/gsi/testdata/providencePipeline/output_expectation/1.0",
+    "output_metrics_dir": "/.mounts/labs/gsi/testdata/providencePipeline/output_metrics/1.0",
     "parameters": {
       "wdl_options": {
         "write_to_cache": false,
