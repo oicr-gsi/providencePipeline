@@ -1,5 +1,4 @@
 use strict;
-use warnings;
 use JSON::PP;
 use Data::Dumper;
 use File::Basename;
@@ -24,16 +23,49 @@ foreach my $line (@trimStats) {
         chomp $rawReads;
         $info{"Stats"}{RawReads} = $rawReads;
     }
+    if ( $line =~ /^QTrimmed:/ ) {
+        my @data                = split( "\t", $line );
+        my $qTrimmedReads = $data[1];
+        my $qTrimmedBases = $data[2];
+        $qTrimmedReads =~ s/reads//;
+        $qTrimmedBases =~ s/bases//;
+        chomp $qTrimmedReads;
+        chomp $qTrimmedBases;
+        $info{"Stats"}{QualityTrimmedReads} = $qTrimmedReads;
+        $info{"Stats"}{QualityTrimmedBases} = $qTrimmedBases;
+    }
+    if ( $line =~ /^KTrimmed:/ ) {
+        my @data                = split( "\t", $line );
+        my $kTrimmedReads = $data[1];
+        my $kTrimmedBases = $data[2];
+        $kTrimmedReads =~ s/reads//;
+        $kTrimmedBases =~ s/bases//;
+        chomp $kTrimmedReads;
+        chomp $kTrimmedBases;
+        $info{"Stats"}{AdapterTrimmedReads} = $kTrimmedReads;
+        $info{"Stats"}{AdapterTrimmedBases} = $kTrimmedBases;
+    }
+		if ( $line =~ /^Trimmed by overlap: / ) {
+        my @data                = split( "\t", $line );
+        my $tTrimmedReads = $data[1];
+        my $tTrimmedBases = $data[2];
+        $tTrimmedReads =~ s/reads//;
+        $tTrimmedBases =~ s/bases//;
+        chomp $tTrimmedReads;
+        chomp $tTrimmedBases;
+        $info{"Stats"}{TrimmedByOverlapReads} = $tTrimmedReads;
+        $info{"Stats"}{TrimmedByOverlapBases} = $tTrimmedBases;
+    }
     if ( $line =~ /^Total Removed:/ ) {
         my @data                = split( "\t", $line );
-        my $adapterTrimmedReads = $data[1];
-        my $adapterTrimmedBases = $data[2];
-        $adapterTrimmedReads =~ s/reads//;
-        $adapterTrimmedBases =~ s/bases//;
-        chomp $adapterTrimmedReads;
-        chomp $adapterTrimmedBases;
-        $info{"Stats"}{AdapterTrimmedReads} = $adapterTrimmedReads;
-        $info{"Stats"}{AdapterTrimmedBases} = $adapterTrimmedBases;
+        my $totalTrimmedReads = $data[1];
+        my $totalTrimmedBases = $data[2];
+        $totalTrimmedReads =~ s/reads//;
+        $totalTrimmedBases =~ s/bases//;
+        chomp $totalTrimmedReads;
+        chomp $totalTrimmedBases;
+        $info{"Stats"}{TotalReadsRemoved} = $totalTrimmedReads;
+        $info{"Stats"}{TotalBasesRemoved} = $totalTrimmedBases;
     }
 }
 
@@ -63,7 +95,7 @@ $rounded                       = $rounded . "%";
 $info{"Stats"}{MappedPercent}  = $rounded;
 $info{"Stats"}{MeanReadLength} = $sam[2];
 $info{"Stats"}{MeanInsertSize} = $sam[3];
-$info{"Stats"}{InserSizeSD}    = $sam[4];
+$info{"Stats"}{InsertSizeSD}    = $sam[4];
 
 #depth and error percent calculation
 my @data = `cat $vcf`;
@@ -103,7 +135,7 @@ $info{"ErrorPercent"} = $round;
 
 my @depth = `cat depth.txt`;
 open( my $fh2, '>', 'error_gt_1.0.txt' );
-print $fh2 "Position\tnDepth\tFiltered\tError\tError_Percent\n";
+print $fh2 "Position\tDepth\tFiltered\tError\tError_Percent\n";
 
 my ( $zero, $point02, $point03, $point04, $point05, $one, $gtone ) = 0;
 foreach my $line (@depth) {
