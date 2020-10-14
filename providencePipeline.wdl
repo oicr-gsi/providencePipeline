@@ -59,6 +59,10 @@ input {
       {
         name: "rmarkdown/2.3",
         url: "https://cran.r-project.org/web/packages/rmarkdown/index.html"
+      },
+      {
+        name: "emboss/6.6.0",
+        url: "ftp://emboss.open-bio.org/pub/EMBOSS/EMBOSS-6.6.0.tar.gz"
       }
     ]
     
@@ -69,6 +73,7 @@ input {
       variantOnlyVcf: "Mutations in VCF format",
       vcf: "Information on all bases in VCF format",
       bl2seqReport: "Local alignment file",
+      needle: "global alignment file",
       alignmentStats: "Stats generated for the BAM file",
       readDistStats: "Read length distribution metrics",
 			insertSizeStats: "Insert size metrics",
@@ -146,6 +151,7 @@ input {
     File consensusFasta = variantCalling.consensusFasta
     File variantOnlyVcf = variantCalling.variantOnlyVcf
     File bl2seqReport = blast2ReferenceSequence.bl2seqReport
+    File needleReport = blast2ReferenceSequence.needleReport
     File alignmentStats = qcStats.alignmentStats
     File readDistStats = qcStats.readDistStats
     File insertSizeStats = qcStats.insertSizeStats
@@ -310,7 +316,7 @@ task variantCalling {
 
 task blast2ReferenceSequence {
   input {
-    String modules = "blast"
+    String modules = "blast emboss/6.6.0"
     File reference
     File consensusFasta
     String sample
@@ -342,7 +348,9 @@ task blast2ReferenceSequence {
         cat error.log 1>&2
         exit 1
     fi
-  >>>
+
+   needle -asequence ~{reference} -bsequence ~{consensusFasta} -gapopen 10 -gapextend .5 -sid1 Sbjct: -sid2 Query: -outfile ~{sample}_needle_report.txt 
+   >>>
 
   runtime {
     memory: "~{mem} GB"
@@ -352,6 +360,7 @@ task blast2ReferenceSequence {
 
   output {
     File bl2seqReport = "~{sample}_bl2seq_report.txt"
+    File needleReport = "~{sample}_needle_report.txt"
   }
 }
 
@@ -438,7 +447,7 @@ task orfStats {
 
 task runReport {
   input {
-    String modules = "rmarkdown/0.1 pt-report-tools/1.1.2"
+    String modules = "rmarkdown/0.1 pt-report-tools/1.0"
     String sample
     String ext
     String flowcell
@@ -485,7 +494,7 @@ task runReport {
     cp $PT_REPORT_TOOLS_ROOT/rmarkdownProvidence.Rmd .
     cp $PT_REPORT_TOOLS_ROOT/OICR.png .
     cp ~{readDistStats} readdist.txt
-    Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='~{ext}',construct='~{construct}',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}',refname='~{basename(reference)}', blast='~{bl2seqReport}', readdist='~{readDistStats}',json='~{json}'), output_file='~{sample}.rmarkdown.pdf')"
+    Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='~{ext}',construct='~{construct}',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}',refname='~{basename(reference)}', blast='~{bl2seqReport}', readdist='~{readDistStats}',json='~{json}'), output_file='~{sample}.pdf')"
     tar -cvhf ~{sample}.scriptRmarkdown.tar.gz *json *pdf *.txt *.Rmd script
    >>>
 
@@ -496,7 +505,7 @@ task runReport {
   }
 
   output {
-    File rmarkdownReport = "~{sample}.rmarkdown.pdf"
+    File rmarkdownReport = "~{sample}.pdf"
     File scriptRmarkdown = "~{sample}.scriptRmarkdown.tar.gz"
   }
 } 
