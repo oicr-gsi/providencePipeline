@@ -10,6 +10,7 @@ my $blast          = $ARGV[3];
 my $refseq         = $ARGV[4];
 my $insertsizedist = $ARGV[5];
 my $orf            = $ARGV[6];
+my $mut            = $ARGV[7];
 my %info;
 
 #adpater trimming stats
@@ -190,17 +191,19 @@ my @blast = `cat $blast`;
 foreach my $line (@blast) {
     if ( $line =~ /Identities.*?(\d+%).*?/ ) {
         my $identity = $1;
-        if ( $identity eq "100%" ) {
-            $info{"Variants"} = "No variants were detected";
-            $info{"ORFs"}     = "No changes in ORFs were detected";
-        }
-        else {
-            $info{"Variants"} = "Variants were detected";
-            $info{"ORFs"}     = "Changes in ORFs were detected";
-        }
         $info{"Consensus"} = $identity;
         last;
     }
+}
+
+my @mutdata =`cat $mut |grep -v \#`;
+if (@mutdata ==0){
+   $info{"Variants"} = "No variants were detected";
+   $info{"ORFs"}     = "No changes in ORFs were detected";
+}
+else {
+   $info{"Variants"} = "Variants were detected";
+   $info{"ORFs"}     = "Changes in ORFs were detected"; 
 }
 
 my $seq = `cat $refseq | grep -v ">"`;
