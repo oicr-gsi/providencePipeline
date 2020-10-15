@@ -137,6 +137,7 @@ input {
       bl2seqReport = blast2ReferenceSequence.bl2seqReport,
       consensusFasta = variantCalling.consensusFasta,
       vcf = variantCalling.vcfFile,
+      mvcf = variantCalling.variantOnlyVcf,
       bbmapLog = bbMap.bbMapLog,
       samStats = qcStats.alignmentStats,
       readDistStats = qcStats.readDistStats,
@@ -458,6 +459,7 @@ task runReport {
     String bbmapLog
     String samStats
     String vcf
+    String mvcf
     String readDistStats
     String insertSizeStats
     String construct
@@ -478,6 +480,7 @@ task runReport {
     bbmapLog: "File path of the bbmap log file"
     samStats: "File path of the samtools stats file"
     vcf: "File path of the VCF file"
+    mvcf: "File path of the mutation VCF file"
     readDistStats: "File path of the read distribution"
     insertSizeStats: "File path of the insert size distrubution"
     construct: "Name of the construct library"
@@ -490,7 +493,7 @@ task runReport {
 
   command <<<
     set -euo pipefail
-    perl $PT_REPORT_TOOLS_ROOT/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference} ~{insertSizeStats} ~{orf} >~{json}
+    perl $PT_REPORT_TOOLS_ROOT/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference} ~{insertSizeStats} ~{orf} ~{mvcf} >~{json}
     cp $PT_REPORT_TOOLS_ROOT/rmarkdownProvidence.Rmd .
     cp $PT_REPORT_TOOLS_ROOT/OICR.png .
     cp ~{readDistStats} readdist.txt
