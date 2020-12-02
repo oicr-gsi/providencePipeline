@@ -493,10 +493,10 @@ task runReport {
 
   command <<<
     set -euo pipefail
+    perl $PT_REPORT_TOOLS_ROOT/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference} ~{insertSizeStats} ~{orf} ~{mvcf} >~{json}
+    cp $PT_REPORT_TOOLS_ROOT/rmarkdownProvidence.Rmd .
+    cp $PT_REPORT_TOOLS_ROOT/OICR.png .
 
-    perl /.mounts/labs/gsiprojects/external/Providence/needle_reports/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{needleReport} ~{reference} ~{insertSizeStats} ~{orf} ~{mvcf} >~{json}
-    cp /.mounts/labs/gsiprojects/external/Providence/needle_reports/rmarkdownProvidence.Rmd .
-    cp /.mounts/labs/gsiprojects/external/Providence/needle_reports/OICR.png .
     cp ~{readDistStats} readdist.txt
     Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='~{ext}',construct='~{construct}',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}',refname='~{basename(reference)}', needle='~{needleReport}', readdist='~{readDistStats}',json='~{json}'), output_file='~{sample}.pdf')"
     tar -cvhf ~{sample}.scriptRmarkdown.tar.gz *json *pdf *.txt *.Rmd script
