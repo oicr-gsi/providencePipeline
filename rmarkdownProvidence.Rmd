@@ -13,7 +13,7 @@ params:
   reference: ""
   refname: ""
   ext: ""
-  blast: ""
+  needle: ""
   refpath: ""
   construct: ""
   json: ""
@@ -54,12 +54,12 @@ The presence of mutations was investigated using bcftools variant calling algori
 \newline
 
 ## \textcolor{blue}{Consensus}
-Query: **`r params$library`**
-\newline
 Sbjct: **`r params$refname`**
+\newline
+Query: **`r params$library`**
 
-``` {r blast_seq, echo=FALSE, engine='bash', comment=''}
-cat blast.txt
+``` {r needle_seq, echo=FALSE, engine='bash', comment=''}
+cat needle.txt
 
 ```
 \leavevmode\newline
