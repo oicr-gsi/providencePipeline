@@ -493,7 +493,7 @@ task runReport {
 
   command <<<
     set -euo pipefail
-    perl $PT_REPORT_TOOLS_ROOT/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference} ~{insertSizeStats} ~{orf} ~{mvcf} >~{json}
+    perl $PT_REPORT_TOOLS_ROOT/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{needleReport} ~{reference} ~{insertSizeStats} ~{orf} ~{mvcf} >~{json}
     cp $PT_REPORT_TOOLS_ROOT/rmarkdownProvidence.Rmd .
     cp $PT_REPORT_TOOLS_ROOT/OICR.png .
 
