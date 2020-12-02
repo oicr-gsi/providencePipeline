@@ -72,8 +72,8 @@ input {
       consensusFasta: "Consenus of the sample in FASTA format",
       variantOnlyVcf: "Mutations in VCF format",
       vcf: "Information on all bases in VCF format",
-      bl2seqReport: "Local alignment file",
-      needle: "global alignment file",
+      needleReport: "global alignment file",
+      bl2seqReport: "local alignment file",
       alignmentStats: "Stats generated for the BAM file",
       readDistStats: "Read length distribution metrics",
 			insertSizeStats: "Insert size metrics",
@@ -107,7 +107,7 @@ input {
 			reference = ref
   }
   
-   call blast2ReferenceSequence {
+   call consensus2ReferenceSequence {
     input:
       consensusFasta = variantCalling.consensusFasta,
       sample = samplePrefix,
@@ -134,7 +134,7 @@ input {
       flowcell = sampleFlowcell,
       reference = ref,
       construct = sampleConstruct,
-      bl2seqReport = blast2ReferenceSequence.bl2seqReport,
+      needleReport = consensus2ReferenceSequence.needleReport,
       consensusFasta = variantCalling.consensusFasta,
       vcf = variantCalling.vcfFile,
       mvcf = variantCalling.variantOnlyVcf,
@@ -151,8 +151,8 @@ input {
     File vcf = variantCalling.vcfFile
     File consensusFasta = variantCalling.consensusFasta
     File variantOnlyVcf = variantCalling.variantOnlyVcf
-    File bl2seqReport = blast2ReferenceSequence.bl2seqReport
-    File needleReport = blast2ReferenceSequence.needleReport
+    File bl2seqReport = consensus2ReferenceSequence.bl2seqReport
+    File needleReport = consensus2ReferenceSequence.needleReport
     File alignmentStats = qcStats.alignmentStats
     File readDistStats = qcStats.readDistStats
     File insertSizeStats = qcStats.insertSizeStats
@@ -315,7 +315,7 @@ task variantCalling {
   }
 }
 
-task blast2ReferenceSequence {
+task consensus2ReferenceSequence {
   input {
     String modules = "blast emboss/6.6.0"
     File reference
@@ -448,14 +448,14 @@ task orfStats {
 
 task runReport {
   input {
-    String modules = "rmarkdown/0.1 pt-report-tools/1.0"
+    String modules = "rmarkdown/0.1 pt-report-tools/2.0"
     String sample
     String ext
     String flowcell
     String library
     String reference
     File consensusFasta
-    String bl2seqReport
+    String needleReport
     String bbmapLog
     String samStats
     String vcf
@@ -476,7 +476,7 @@ task runReport {
     library: "Library name of the sample"
     reference: "File path of the reference used for alignment"
     consensusFasta: "File path of the consensus generated"
-    bl2seqReport: "File path of the blast report"
+    needleReport: "File path of the needle report"
     bbmapLog: "File path of the bbmap log file"
     samStats: "File path of the samtools stats file"
     vcf: "File path of the VCF file"
@@ -493,11 +493,12 @@ task runReport {
 
   command <<<
     set -euo pipefail
-    perl $PT_REPORT_TOOLS_ROOT/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{bl2seqReport} ~{reference} ~{insertSizeStats} ~{orf} ~{mvcf} >~{json}
+    perl $PT_REPORT_TOOLS_ROOT/info_for_rmarkdown.pl ~{bbmapLog} ~{samStats} ~{vcf} ~{needleReport} ~{reference} ~{insertSizeStats} ~{orf} ~{mvcf} >~{json}
     cp $PT_REPORT_TOOLS_ROOT/rmarkdownProvidence.Rmd .
     cp $PT_REPORT_TOOLS_ROOT/OICR.png .
+
     cp ~{readDistStats} readdist.txt
-    Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='~{ext}',construct='~{construct}',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}',refname='~{basename(reference)}', blast='~{bl2seqReport}', readdist='~{readDistStats}',json='~{json}'), output_file='~{sample}.pdf')"
+    Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='~{ext}',construct='~{construct}',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}',refname='~{basename(reference)}', needle='~{needleReport}', readdist='~{readDistStats}',json='~{json}'), output_file='~{sample}.pdf')"
     tar -cvhf ~{sample}.scriptRmarkdown.tar.gz *json *pdf *.txt *.Rmd script
    >>>
 

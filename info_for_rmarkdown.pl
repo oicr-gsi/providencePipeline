@@ -6,7 +6,7 @@ use File::Basename;
 my $trimming       = $ARGV[0];
 my $samstats       = $ARGV[1];
 my $vcf            = $ARGV[2];
-my $blast          = $ARGV[3];
+my $needle         = $ARGV[3];
 my $refseq         = $ARGV[4];
 my $insertsizedist = $ARGV[5];
 my $orf            = $ARGV[6];
@@ -186,14 +186,17 @@ $info{"Error"}{"0.5-1"}   = "$one ($percent_error%)";
 $percent_error            = calc_pert( $all, $gtone );
 $info{"Error"}{">1"}      = "$gtone ($percent_error%)";
 
-system("ln -s $blast blast.txt");
-my @blast = `cat $blast`;
-foreach my $line (@blast) {
-    if ( $line =~ /Identities.*?(\d+%).*?/ ) {
+#system("ln -s $needle needle.txt");
+open( NFH, '>', "needle.txt" ) or die $!;
+my @needle = `cat $needle`;
+foreach my $line (@needle) {
+    if ( $line =~ /Identity.*?(\d+.\d+%).*?/ ) {
         my $identity = $1;
         $info{"Consensus"} = $identity;
-        last;
     }
+		if ($line !~ /^#/) {
+			print NFH "$line";
+		}
 }
 
 my @mutdata =`cat $mut |grep -v \#`;
