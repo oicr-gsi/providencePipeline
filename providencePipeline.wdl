@@ -448,7 +448,7 @@ task orfStats {
 
 task runReport {
   input {
-    String modules = "rmarkdown/0.1 pt-report-tools/2.0"
+    String modules = "rmarkdown/0.1 pt-report-tools/2.1"
     String sample
     String ext
     String flowcell
@@ -499,7 +499,7 @@ task runReport {
 
     cp ~{readDistStats} readdist.txt
     Rscript -e "rmarkdown::render('./rmarkdownProvidence.Rmd', params=list(ext='~{ext}',construct='~{construct}',sample='~{sample}',library='~{library}',flowcell='~{flowcell}', refpath='~{reference}',refname='~{basename(reference)}', needle='~{needleReport}', readdist='~{readDistStats}',json='~{json}'), output_file='~{sample}.pdf')"
-    tar -cvhf ~{sample}.scriptRmarkdown.tar.gz *json *pdf *.txt *.Rmd script
+    tar -cvhf ~{sample}.scriptRmarkdown.tar.gz *json *pdf OICR.png *.txt *.Rmd script
    >>>
 
   runtime {

@@ -48,6 +48,8 @@ Run: **`r params$flowcell`**
 The consensus sequence matched the reference sequence with **`r info$Consensus`** sequencing identity.
 \newline
 
+`r if(as.integer(info$Stats$PassedReads) < 100000){"Please Note: This sample did not meet the minimum assay requirements of 100,000 passed reads"}`
+
 ## \textcolor{blue}{Mutations}
 
 The presence of mutations was investigated using bcftools variant calling algorithm. `r info$Variants` 
