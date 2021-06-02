@@ -1,0 +1,197 @@
+[
+    {
+        "arguments": {
+            "providencePipeline.bbMap.mem": null,
+            "providencePipeline.bbMap.modules": null,
+            "providencePipeline.bbMap.reference": null,
+            "providencePipeline.bbMap.timeout": null,
+            "providencePipeline.bbMap.trimq": null,
+            "providencePipeline.bwa.mem": null,
+            "providencePipeline.bwa.modules": null,
+            "providencePipeline.bwa.threads": null,
+            "providencePipeline.bwa.timeout": null,
+            "providencePipeline.consensus2ReferenceSequence.mem": null,
+            "providencePipeline.consensus2ReferenceSequence.modules": null,
+            "providencePipeline.consensus2ReferenceSequence.timeout": null,
+            "providencePipeline.fastq1": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/providencePipeline/input_data/SWID_15558553_PTRS_0001_nn_U_PE_475_WT_120519_RB009_191212_M00753_0197_000000000-D7KV7_ATCGATCG-TGCTTCCA_L001_R1_001.fastq.gz",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
+            },
+            "providencePipeline.fastq2": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/providencePipeline/input_data/SWID_15558553_PTRS_0001_nn_U_PE_475_WT_120519_RB009_191212_M00753_0197_000000000-D7KV7_ATCGATCG-TGCTTCCA_L001_R2_001.fastq.gz",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
+            },
+            "providencePipeline.orfStats.mem": null,
+            "providencePipeline.orfStats.modules": null,
+            "providencePipeline.orfStats.timeout": null,
+            "providencePipeline.qcStats.mem": null,
+            "providencePipeline.qcStats.modules": null,
+            "providencePipeline.qcStats.timeout": null,
+            "providencePipeline.ref": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/providencePipeline/input_data/lfPVT-S5000.fa",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
+            },
+            "providencePipeline.runReport.json": null,
+            "providencePipeline.runReport.mem": null,
+            "providencePipeline.runReport.modules": null,
+            "providencePipeline.runReport.timeout": null,
+            "providencePipeline.sampleConstruct": "PTRS_0002_nn_U_PE_718_WG",
+            "providencePipeline.sampleExt": "mPVT-S5000 B009",
+            "providencePipeline.sampleFlowcell": "191212_M00753_0197_000000000-D7KV7",
+            "providencePipeline.sampleLibrary": "PTRS_0001_nn_U_PE_475_WT",
+            "providencePipeline.samplePrefix": "PTRS_0001",
+            "providencePipeline.variantCalling.mem": null,
+            "providencePipeline.variantCalling.modules": null,
+            "providencePipeline.variantCalling.timeout": null
+        },
+        "description": "myWorkflow workflow test",
+        "engineArguments": {},
+        "id": "testCase1",
+        "metadata": {
+            "providencePipeline.alignmentStats": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.bai": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.bam": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.bbMaplog": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.bl2seqReport": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.consensusFasta": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.insertSizeStats": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.needleReport": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.orf": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.readDistStats": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.report": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.reportScript": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.variantOnlyVcf": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "providencePipeline.vcf": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_providencePipeline_testCase1_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            }
+        },
+        "validators": [
+            {
+                "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
+                "metrics_compare": "@CHECKOUT@/tests/compare.sh",
+                "output_metrics": "/.mounts/labs/gsi/testdata/providencePipeline/output_metrics/1.0/testCase1.metrics",
+                "type": "script"
+            }
+        ]
+    }
+]

@@ -1,0 +1,6 @@
+{
+    "names": [
+        "providencePipeline"
+    ],
+    "wdl": "providencePipeline.wdl"
+}
